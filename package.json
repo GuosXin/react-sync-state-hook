@@ -1,0 +1,25 @@
+{
+  "name": "react-sync-state-hook",
+  "version": "1.0.1",
+  "description": "Using synchronous state in react.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "react",
+    "sync",
+    "state",
+    "hook"
+  ],
+  "author": "Xin",
+  "license": "MIT",
+  "devDependencies": {
+    "react": "^16.9.0",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "@testing-library/react-hooks": "^8.0.1",
+    "jest": "^28.1.3",
+    "react-test-renderer": "^16.9.0"
+  }
+}
