@@ -20,7 +20,7 @@ yarn add react-sync-state-hook
 
 ```js
 import { useEffect } from 'react'
-import useSyncState from 'react-sync-state-hook'
+import { useSyncState } from 'react-sync-state-hook'
 
 export default MyComponent = () => {
     const [ asyncState, setState, syncState ] = useSyncState('initVal')
@@ -28,10 +28,11 @@ export default MyComponent = () => {
     useEffect(() =>{
         setState('updateVal')
         console.log(asyncState)     // initVal
-        console.log(syncState.value)    // updateVal
+        console.log(syncState.current)    // updateVal
     }, [])
     
-    // asyncState用于刷新视图，syncState.value用于同步操作
+    // asyncState用于刷新视图，syncState.current用于同步操作
+    
     return (
         <div>{ asyncState }</div>
     )

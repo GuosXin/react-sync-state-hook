@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
-export default function useSyncState (value) {
+export function useSyncState (value) {
     const [ asyncState, setAsyncState ] = useState(value)
-    let syncState = { value }
+    let syncState = useRef(value)
     const setState = (val) => {
-        syncState.value = val
+        syncState.current = val
         setAsyncState(val)
     }
     return [ asyncState, setState, syncState ]
