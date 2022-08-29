@@ -1,6 +1,6 @@
 {
   "name": "react-sync-state-hook",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Using synchronous state in react.",
   "main": "index.js",
   "scripts": {

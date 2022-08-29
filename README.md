@@ -1,6 +1,6 @@
 ## 介绍
 
-能够在React中使用同步的State Hook，更优雅地处理useState的异步问题。
+能够在React中使用同步操作的State Hook，更优雅地处理useState的异步问题。
 
 ## 安装
 
