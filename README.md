@@ -32,6 +32,7 @@ export default MyComponent = () => {
     }, [])
     
     // asyncState用于刷新视图，syncState.current用于同步操作
+    // 注意：syncState.current只能通过setState去修改，不要直接赋值去修改，因为syncState.current的值必须保证和asyncState的值同步，直接修改会带来一些问题
     
     return (
         <div>{ asyncState }</div>
