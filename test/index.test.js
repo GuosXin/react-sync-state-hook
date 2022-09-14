@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import { useSyncState } from '../index'
 
+
 test('常规测试', () => {
     const { result } = renderHook(() => useSyncState('初始值'))
     const [ asyncState, setState, syncState ] = result.current
@@ -12,6 +13,7 @@ test('常规测试', () => {
     expect(asyncState).toBe('初始值')
     expect(syncState.current).toBe('当前值')
 })
+
 
 test('循环测试', () => {
     const { result } = renderHook(() => useSyncState('初始值'))
