@@ -17,6 +17,9 @@
   ],
   "author": "Xin",
   "license": "MIT",
+  "peerDependencies": {
+    "react": ">= 16.9.0"
+  },
   "devDependencies": {
     "react": "^16.9.0",
     "@babel/core": "^7.4.5",
