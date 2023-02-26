@@ -29,19 +29,19 @@ import { useEffect } from 'react'
 import { useSyncState } from 'react-sync-state-hook'
 
 export default MyComponent = () => {
-    const [ asyncState, setState, syncState ] = useSyncState('initVal')
+    const [ state, setState, current ] = useSyncState('initVal')
     
     useEffect(() =>{
         setState('updateVal')
-        console.log(asyncState)     // initVal
-        console.log(syncState.current)    // updateVal
+        console.log(state)     // initVal
+        console.log(current.current)    // updateVal
     }, [])
     
-    // asyncState用于刷新视图，syncState.current用于同步操作
-    // 注意：syncState.current只能通过setState去修改，不要直接赋值去修改，因为syncState.current的值必须保证和asyncState的值同步，直接修改会带来一些问题
+    // state用于刷新视图，current.current用于同步操作
+    // 注意：如果直接修改current值的话，切记修改完后要再调用一次setState方法同步一下最新值。这样使用current也可以实现一些性能上的优化，减少因修改state带来的重新渲染次数。
     
     return (
-        <div>{ asyncState }</div>
+        <div>{ state }</div>
     )
 }
 ```
