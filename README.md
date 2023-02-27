@@ -1,6 +1,6 @@
 ## 介绍
 
-能够在React中使用同步操作的State Hook，更优雅地处理useState的异步问题。
+能够在React中使用同步操作的State Hook，解决useState无法获取最新值的问题。
 
 ## 兼容性
 
@@ -38,7 +38,9 @@ export default MyComponent = () => {
     }, [])
     
     // state用于刷新视图，current.current用于同步操作
-    // 注意：如果直接修改current值的话，切记修改完后要再调用一次setState方法同步一下最新值。这样使用current也可以实现一些性能上的优化，减少因修改state带来的重新渲染次数。
+    // 注意：
+    // 如果直接修改current的话，切记修改完后要再调用一次setState方法同步一下状态值。
+    // 事实上先对current做修改最后再同步状态值的用法，是可以带来一些性能上的优化的，因为能减少因直接修改状态值而带来的渲染次数
     
     return (
         <div>{ state }</div>
