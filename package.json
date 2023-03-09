@@ -1,31 +1,33 @@
 {
   "name": "react-sync-state-hook",
-  "version": "1.0.7",
+  "version": "2.0.1",
   "description": "Using synchronous state in react.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GuosXin/react-sync-state-hook.git"
   },
   "keywords": [
     "react",
     "sync",
+    "current",
     "state",
     "hook",
-    "sync-hook",
     "state-hook",
-    "sync-state-hook"
+    "sync-state-hook",
+    "current-state",
+    "current-state-hook"
   ],
   "author": "Xin",
   "license": "MIT",
   "peerDependencies": {
     "react": ">= 16.9.0"
   },
-  "devDependencies": {
-    "react": "^16.9.0",
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
-    "@testing-library/react-hooks": "^8.0.1",
-    "jest": "^28.1.3",
-    "react-test-renderer": "^16.9.0"
-  }
+  "bugs": {
+    "url": "https://github.com/GuosXin/react-sync-state-hook/issues"
+  },
+  "homepage": "https://github.com/GuosXin/react-sync-state-hook#readme"
 }
