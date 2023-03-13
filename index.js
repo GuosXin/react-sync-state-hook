@@ -23,17 +23,20 @@ const clone = function (val){
  */
 export const useSyncState = function ( initVal ) {
     // 初始值
-    const value = useRef(typeof initVal === 'function' ? initVal.call(this) : initVal).current
-    const cloneVal = useRef(clone(value)).current    // 避免初始值为引用类型时，state和current指向同个地址，使用深拷贝会影响性能
+    let cloneVal;
 
     // 状态值
-    const [ state, setState ] = useState(value)
+    const [ state, setState ] = useState(() => {
+        const value = typeof initVal === 'function' ? initVal.call(this) : initVal
+        cloneVal = clone(value) // 避免初始值为引用类型时，state和current指向同个地址，使用深拷贝会影响性能
+        return value
+    })
 
     // 返回值
     const result = useRef({
         current: cloneVal
     }).current
-    result.state = state    // state不能在ref中定义，会失去响应
+    result.state = state    // state不能在ref中赋值，会失去响应
 
     // 同步state和current的值
     const setValue = useCallback(( changedVal ) => {
