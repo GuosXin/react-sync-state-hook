@@ -1,6 +1,6 @@
 ## 介绍
 
-能够在React中使用同步操作的State Hook，解决useState、useMemo无法获取最新状态的问题。
+能够在React中使用同步操作的State Hook，解决useState、useMemo无法获取最新状态的问题，让你不再担心复杂的状态数据流向问题。
 
 ## 兼容性
 
