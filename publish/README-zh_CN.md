@@ -43,7 +43,7 @@ export default MyComponent = () => {
         console.log(state.current)   // 1
         console.log(memo.state)      // 100
         console.log(memo.current)    // 101
-        // 切记：debug的时候尽量不要直接打印state，容易受到干扰
+        // debug的时候尽量不要直接打印state整个对象，而应该打印state.state或state.curent，memo同样如此，否则容易受到干扰
     }, [])
     
     return (

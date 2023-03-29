@@ -43,7 +43,7 @@ export default MyComponent = () => {
         console.log(state.current)   // 1
         console.log(memo.state)      // 100
         console.log(memo.current)    // 101
-        // When debugging, try not to print state directly, it is easy to be disturbed
+        // When debugging, try not to print the entire state object directly, but print state.state or state.curent, memo is the same, otherwise it is easy to be disturbed
     }, [])
     
     return (
