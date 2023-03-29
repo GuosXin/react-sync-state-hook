@@ -2,7 +2,7 @@ English | [简体中文](./publish/README-zh_CN.md)
 
 ## Introduce
 
-State Hook, which can use synchronous operations in React, allow you to get the next state, so that you no longer have to worry about complex state data flow problems.
+React-ync-state-hook, which can use synchronous operations in React, allow you to get the next state, so that you no longer have to worry about complex state data flow problems.
 
 ## Compatibility
 
