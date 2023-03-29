@@ -1,20 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-
-/**
- * 浅拷贝
- * @param {*} val 
- * @returns 
- */
-const clone = function (val){
-    let type = Object.prototype.toString.call(val).slice(8, -1)
-    if(type === "Date") return new Date(val)
-    if(type === "RegExp") return new RegExp(val)
-    if(type === "Array") return [...val]
-    if(type === "Object") return {...val}
-    if(type === "Undefined") return
-    return val
-}
-
+import _ from 'lodash'
 
 /**
  * useSyncState
@@ -28,7 +13,7 @@ export const useSyncState = function ( initVal ) {
     // 状态值
     const [ state, setState ] = useState(() => {
         const value = typeof initVal === 'function' ? initVal.call(this) : initVal
-        cloneVal = clone(value) // 避免初始值为引用类型时，state和current指向同个地址，使用深拷贝会影响性能
+        cloneVal = _.cloneDeep(value) // 避免初始值为引用类型时，state和current指向同个地址
         return value
     })
 
@@ -36,12 +21,18 @@ export const useSyncState = function ( initVal ) {
     const result = useRef({
         current: cloneVal
     }).current
-    result.state = state    // state不能在ref中赋值，会失去响应
+
+    // state不能在ref中赋值，会失去响应
+    Object.defineProperty(result, "state", {
+        configurable: true,
+        writable: false,
+        value: state
+    });
 
     // 同步state和current的值
     const setValue = useCallback(( changedVal ) => {
         const val = typeof changedVal === 'function' ? changedVal.call(this, result.current) : changedVal
-        result.current = clone(val)   // 避免修改值为引用类型时，state和current指向同个地址，使用深拷贝会影响性能
+        result.current = _.cloneDeep(val)
         setState(val)
     }, [])
 
@@ -64,7 +55,12 @@ export const useSyncMemo = function ( fn, arr ) {
     const result = useRef({
         current: fn.call(this)
     }).current
-    result.state = memo
+
+    Object.defineProperty(result, "state", {
+        configurable: true,
+        writable: false,
+        value: memo
+    });
 
     // 监听current值的setter
     useEffect(() => {

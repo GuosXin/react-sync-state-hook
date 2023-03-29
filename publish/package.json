@@ -1,12 +1,10 @@
 {
-  "private": true,
   "name": "react-sync-state-hook",
-  "version": "1.0.0",
+  "version": "2.0.2",
   "description": "Using synchronous state in react.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.config.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -26,15 +24,12 @@
   ],
   "author": "Xin",
   "license": "MIT",
+  "peerDependencies": {
+    "react": ">= 16.9.0",
+    "lodash": ">= 4.17.21"
+  },
   "bugs": {
     "url": "https://github.com/GuosXin/react-sync-state-hook/issues"
   },
-  "homepage": "https://github.com/GuosXin/react-sync-state-hook#readme",
-  "devDependencies": {
-    "webpack": "^5.76.3",
-    "webpack-cli": "^5.0.1"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
-  }
+  "homepage": "https://github.com/GuosXin/react-sync-state-hook#readme"
 }

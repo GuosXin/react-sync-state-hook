@@ -1,4 +1,4 @@
-English | [简体中文](./publish/README-zh_CN.md)
+English | [简体中文](./README-zh_CN.md)
 
 ## Introduce
 
