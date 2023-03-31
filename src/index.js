@@ -25,6 +25,7 @@ export const useSyncState = function ( initVal ) {
     // state不能在ref中赋值，会失去响应
     Object.defineProperty(result, "state", {
         configurable: true,
+        enumerable: true,
         writable: false,
         value: state
     });
@@ -53,11 +54,12 @@ export const useSyncMemo = function ( fn, arr ) {
     
     // 返回值
     const result = useRef({
-        current: fn.call(this)
+        current: _.cloneDeep(fn())
     }).current
 
     Object.defineProperty(result, "state", {
         configurable: true,
+        enumerable: true,
         writable: false,
         value: memo
     });
@@ -72,7 +74,7 @@ export const useSyncMemo = function ( fn, arr ) {
                 },
                 set(newVal) {
                     current = newVal
-                    result.current = fn.call(this)
+                    result.current = _.cloneDeep(fn())
                 }
             })
         })
