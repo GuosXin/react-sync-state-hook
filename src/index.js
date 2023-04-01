@@ -12,7 +12,7 @@ export const useSyncState = function ( initVal ) {
 
     // 状态值
     const [ state, setState ] = useState(() => {
-        const value = typeof initVal === 'function' ? initVal.call(this) : initVal
+        const value = typeof initVal === 'function' ? initVal() : initVal
         cloneVal = _.cloneDeep(value) // 避免初始值为引用类型时，state和current指向同个地址
         return value
     })
@@ -32,7 +32,7 @@ export const useSyncState = function ( initVal ) {
 
     // 同步state和current的值
     const setValue = useCallback(( changedVal ) => {
-        const val = typeof changedVal === 'function' ? changedVal.call(this, result.current) : changedVal
+        const val = typeof changedVal === 'function' ? changedVal(result.current) : changedVal
         result.current = _.cloneDeep(val)
         setState(val)
     }, [])

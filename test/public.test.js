@@ -3,7 +3,7 @@
  */
 import { renderHook } from '@testing-library/react'
 import { useEffect } from 'react'
-import { useSyncState, useSyncMemo } from '../src'
+import { useSyncState, useSyncMemo } from '../public'
 
 /**
  * useSyncState测试

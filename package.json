@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test:src": "jest test/src.test.js",
-    "test:build": "jest test/build.test.js",
+    "test:public": "jest test/public.test.js",
     "test:stress": "jest test/stress.test.js",
     "build": "webpack --config build/webpack.config.js"
   },
