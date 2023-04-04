@@ -49,13 +49,34 @@ export const useSyncState = function ( initVal ) {
  * @returns 
  */
 export const useSyncMemo = function ( fn, arr ) {
-    // memo值
-    const memo = useMemo(fn, arr.map(item => item.state))
-    
+    // 是否需要重新计算
+    let recompute;
+
     // 返回值
-    const result = useRef({
-        current: _.cloneDeep(fn())
-    }).current
+    const result = useRef({}).current
+
+    useState(() => {
+        let compute = fn()
+        recompute = false
+        Object.defineProperty(result, "current", {
+            configurable: true,
+            enumerable: true,
+            get: () => {
+                if(recompute){
+                    compute = fn()
+                    recompute = false
+                    return compute
+                }else{
+                    return compute
+                }
+            }
+        });
+    })
+
+    // memo值
+    const memo = useMemo(() => {
+        return _.cloneDeep(result.current)
+    }, arr.map(item => item.state))
 
     Object.defineProperty(result, "state", {
         configurable: true,
@@ -74,7 +95,7 @@ export const useSyncMemo = function ( fn, arr ) {
                 },
                 set(newVal) {
                     current = newVal
-                    result.current = _.cloneDeep(fn())
+                    recompute = true
                 }
             })
         })
