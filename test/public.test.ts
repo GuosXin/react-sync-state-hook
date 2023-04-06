@@ -3,7 +3,7 @@
  */
 import { renderHook } from '@testing-library/react'
 import { useEffect } from 'react'
-import { useSyncState, useSyncMemo } from '../src'
+import { useSyncState, useSyncMemo } from '../public'
 
 /**
  * useSyncState测试
@@ -98,9 +98,14 @@ test('useSyncState的状态和ref为深拷贝', () => {
 
 
 test('useSyncState在setState后，ref会实时更新，状态在下一轮渲染会更新', () => {
+    interface State {
+        a: any;
+        [key: string]: any;
+    }
+
     const { result } = renderHook(() => {
         const [ state, setState ] = useSyncState(0)
-        const [ state1, setState1 ] = useSyncState({ a: { b: 1 } })
+        const [ state1, setState1 ] = useSyncState<State>({ a: { b: 1 } })
 
         useEffect(() => {
             setState(1)

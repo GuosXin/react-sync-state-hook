@@ -1,25 +1,33 @@
+import type { Dispatch, SetStateAction } from 'react';
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import _ from 'lodash'
+import * as _ from 'lodash'
+
+interface SyncState<S>{
+    state: S,
+    current: S
+}
+type SyncDependencyList = SyncState<any>[]
 
 /**
  * useSyncState
  * @param {*} initVal 初始化值，可以是任意类型的值
  * @returns 
  */
-export const useSyncState = function ( initVal ) {
+export const useSyncState = <S>( initVal: S | (() => S)): [SyncState<S>, Dispatch<SetStateAction<S>>] => {
     // 初始值
     let cloneVal;
 
     // 状态值
     const [ state, setState ] = useState(() => {
-        const value = typeof initVal === 'function' ? initVal() : initVal
+        const value = typeof initVal === 'function' ? (initVal as (() => S))() : initVal
         cloneVal = _.cloneDeep(value) // 避免初始值为引用类型时，state和current指向同个地址
         return value
     })
 
     // 返回值
-    const result = useRef({
-        current: cloneVal
+    const result: SyncState<S> = useRef({
+        current: cloneVal,
+        state: null
     }).current
 
     // state不能在ref中赋值，会失去响应
@@ -31,8 +39,8 @@ export const useSyncState = function ( initVal ) {
     });
 
     // 同步state和current的值
-    const setValue = useCallback(( changedVal ) => {
-        const val = typeof changedVal === 'function' ? changedVal(result.current) : changedVal
+    const setValue = useCallback(( changedVal: SetStateAction<S> ) => {
+        const val = typeof changedVal === 'function' ? (changedVal as ((prevState: S) => S))(result.current) : changedVal
         result.current = _.cloneDeep(val)
         setState(val)
     }, [])
@@ -48,12 +56,15 @@ export const useSyncState = function ( initVal ) {
  * @param { Array } arr 受监听的状态数组
  * @returns 
  */
-export const useSyncMemo = function ( fn, arr ) {
+export const useSyncMemo = <T>( fn: () => T, arr: SyncDependencyList ): SyncState<T> => {
     // 是否需要重新计算
-    let recompute;
+    let recompute: boolean;
 
     // 返回值
-    const result = useRef({}).current
+    const result: SyncState<T> = useRef({
+        state: null,
+        current: null
+    }).current
 
     useState(() => {
         let compute = fn()
