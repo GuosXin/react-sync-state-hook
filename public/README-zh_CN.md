@@ -59,6 +59,15 @@ export default MyComponent = () => {
 
 * ### useSyncState(initValue)
 
+```
+import type { Dispatch, SetStateAction } from 'react';
+interface SyncState<S> {
+    state: S;
+    current: S;
+}
+function useSyncState<S>(initVal: S | (() => S)): [SyncState<S>, Dispatch<SetStateAction<S>>];
+```
+
 该hook类似于useState()，接收一个任意类型的参数，区别在于返回值中的state分为state.state以及state.current两个值。其中state.state表示状态值，可用于刷新视图，用法跟useState返回的状态值完全一样。而state.current则表示当前值，即在执行setState()操作之后，能够立刻更新为最新状态值，可用于同步操作，不能用于刷新视图。
 
 注意：state.state和state.current为引用类型时，它们的赋值是一个深拷贝过程，如果直接修改current的话，切记修改完后要再调用一次setState方法更新一下状态值。事实上先对current做修改最后再同步状态值的用法，是可以带来一些性能上的优化的，因为这样能减少因直接修改状态值而带来的渲染次数。
@@ -106,6 +115,16 @@ export default MyComponent = () => {
 ```
 
 * ### useSyncMemo(fn, arr)
+
+```
+import type { Dispatch, SetStateAction } from 'react';
+interface SyncState<S> {
+    state: S;
+    current: S;
+}
+type SyncDependencyList = SyncState<any>[];
+function useSyncMemo<T>(fn: () => T, arr: SyncDependencyList): SyncState<T>;
+```
 
 该hook类似于useMemo()，接收一个计算函数和依赖项数组，不同的是返回一个对象，包含state以及current两个值，其中依赖项数组的元素需为useSyncState()返回的state对象，如果想要立刻获取到最新的状态值，计算函数中还需用依赖项的current值进行计算。
 

@@ -59,6 +59,15 @@ export default MyComponent = () => {
 
 * ### useSyncState(initValue)
 
+```
+import type { Dispatch, SetStateAction } from 'react';
+interface SyncState<S> {
+    state: S;
+    current: S;
+}
+function useSyncState<S>(initVal: S | (() => S)): [SyncState<S>, Dispatch<SetStateAction<S>>];
+```
+
 Some usages:
 
 ```
@@ -104,6 +113,15 @@ export default MyComponent = () => {
 ```
 
 * ### useSyncMemo(fn, arr)
+
+```
+import type { Dispatch, SetStateAction } from 'react';
+interface SyncState<S> {
+    state: S;
+    current: S;
+}
+function useSyncState<S>(initVal: S | (() => S)): [SyncState<S>, Dispatch<SetStateAction<S>>];
+```
 
 Some usages:
 
