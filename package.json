@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-sync-state-hook",
-  "version": "2.2.0",
+  "version": "1.0.0",
   "description": "Using synchronous state in react.",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,9 @@
     "sync-state-hook",
     "同步",
     "最新",
-    "状态"
+    "状态",
+    "无依赖",
+    "消除副作用"
   ],
   "author": "Xin",
   "license": "MIT",
@@ -52,5 +54,8 @@
     "typescript": "^5.0.3",
     "webpack": "^5.76.3",
     "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "handleable-immutable": "^1.1.0"
   }
 }

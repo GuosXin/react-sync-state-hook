@@ -1,54 +1,44 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import * as _ from 'lodash'
+import { useState, useCallback, useMemo } from 'react'
+import { createImmutable, getImmutableCopy, getImmutableBase, getImmutableParent, setHandler } from 'handleable-immutable'
 
-interface SyncState<S>{
-    state: S,
-    current: S
-}
-type SyncDependencyList = SyncState<any>[]
+let _GET_DEPS_TAG_ = false;
+let _DEPS_BUS_: any = []
 
 /**
  * useSyncState
  * @param {*} initVal 初始化值，可以是任意类型的值
  * @returns 
  */
-export const useSyncState = <S>( initVal: S | (() => S)): [SyncState<S>, Dispatch<SetStateAction<S>>] => {
-    // 初始值
-    let cloneVal;
-
+export const useSyncState = <S>( initVal: S | (() => S)): [S, Dispatch<SetStateAction<S>>, any] => {
     // 状态值
-    const [ state, setState ] = useState(() => {
-        const value = typeof initVal === 'function' ? (initVal as (() => S))() : initVal
-        cloneVal = _.cloneDeep(value) // 避免初始值为引用类型时，state和current指向同个地址
-        return value
+    const [ state, setState ] = useState(initVal)
+
+    // 当前值
+    let current = createImmutable({ current: state }, {
+        get(t, p, r){
+            if(_GET_DEPS_TAG_){
+                let obj = r
+                let parent = getImmutableParent(obj)
+                while(parent){
+                    obj = parent
+                    parent = getImmutableParent(obj)
+                }
+                _DEPS_BUS_.push(obj)
+            }
+        },
     })
-
-    // 返回值
-    const result: SyncState<S> = useRef({
-        current: cloneVal,
-        state: null
-    }).current
-
-    // state不能在ref中赋值，会失去响应
-    Object.defineProperty(result, "state", {
-        configurable: true,
-        enumerable: true,
-        writable: false,
-        value: state
-    });
-
+    
     // 同步state和current的值
     const setValue = useCallback(( changedVal: SetStateAction<S> ) => {
-        const val = typeof changedVal === 'function' ? (changedVal as ((prevState: S) => S))(result.current) : changedVal
-        result.current = _.cloneDeep(val)
-        setState(val)
+        const val = typeof changedVal === 'function' ? (changedVal as any)(current.current) : changedVal
+        current.current = val
+        setState(getImmutableCopy(val))
     }, [])
-
+    
     // 返回一个数组
-    return [ result, setValue ]
+    return [ state, setValue, current ]
 }
-
 
 /**
  * useSyncMemo
@@ -56,61 +46,62 @@ export const useSyncState = <S>( initVal: S | (() => S)): [SyncState<S>, Dispatc
  * @param { Array } arr 受监听的状态数组
  * @returns 
  */
-export const useSyncMemo = <T>( fn: () => T, arr: SyncDependencyList ): SyncState<T> => {
+export const useSyncMemo = <T>( fn: () => T, deps?: Array<any> ): any => {
     // 是否需要重新计算
-    let recompute: boolean;
+    let recompute = false;
+    // 缓存计算结果
+    let compute: any;
+    
+    // 依赖项
+    let stateDeps: Array<any> = []
 
-    // 返回值
-    const result: SyncState<T> = useRef({
-        state: null,
-        current: null
-    }).current
-
-    useState(() => {
-        let compute = fn()
-        recompute = false
-        Object.defineProperty(result, "current", {
-            configurable: true,
-            enumerable: true,
-            get: () => {
-                if(recompute){
-                    compute = fn()
-                    recompute = false
-                    return compute
-                }else{
-                    return compute
-                }
-            }
-        });
-    })
-
-    // memo值
-    const memo = useMemo(() => {
-        return _.cloneDeep(result.current)
-    }, arr.map(item => item.state))
-
-    Object.defineProperty(result, "state", {
-        configurable: true,
-        enumerable: true,
-        writable: false,
-        value: memo
-    });
-
-    // 监听current值的setter
-    useEffect(() => {
-        arr.forEach(item => {
-            let current = item.current
-            Object.defineProperty(item, 'current', {
-                get() {
-                    return current
-                },
-                set(newVal) {
-                    current = newVal
+    // 有依赖
+    if(deps){
+        compute = fn()
+        deps?.forEach(item => {
+            stateDeps.push(getImmutableBase(item).current)
+            setHandler(item, {
+                set(){
                     recompute = true
                 }
             })
         })
-    }, [])
+    }
+    // 无依赖
+    else{
+        // 移花接木大法
+        _GET_DEPS_TAG_ = true;
+        _DEPS_BUS_ = []
+        compute = fn()
+        const deps = [...new Set(_DEPS_BUS_)]
+        _DEPS_BUS_ = []
+        _GET_DEPS_TAG_ = false;
+        deps.forEach(item => {
+            stateDeps.push(getImmutableBase(item).current)
+            setHandler(item, {
+                set(){
+                    recompute = true
+                }
+            })
+        })
+    }
 
-    return result
+    // 状态值
+    const memo = useMemo(() => getImmutableCopy(compute), stateDeps)
+
+    // 当前值
+    let current = createImmutable({current: memo}, {
+        get(){
+            if(recompute){
+                compute = fn()
+                recompute = false
+                current.current = compute
+            }
+        }
+    })
+    
+    // 返回值
+    return [memo, current]
 }
+
+export const _getImmutableCopy_ = getImmutableCopy

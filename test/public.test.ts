@@ -3,7 +3,8 @@
  */
 import { renderHook } from '@testing-library/react'
 import { useEffect } from 'react'
-import { useSyncState, useSyncMemo } from '../public'
+import { useSyncState, useSyncMemo, _getImmutableCopy_ } from '../public'
+import { createImmutable } from 'handleable-immutable'
 
 /**
  * useSyncState测试
@@ -11,10 +12,9 @@ import { useSyncState, useSyncMemo } from '../public'
 test('useSyncState初始化基本数据类型正常', () => {
     const { result } = renderHook(() => useSyncState(0))
 
-    const [ state, setState ] = result.current
-    expect(state).toEqual({ state: 0, current: 0 })
-    expect(state.state).toEqual(0)
-    expect(state.current).toEqual(0)
+    const [ state, setState, curState ] = result.current
+    expect(state).toEqual(0)
+    expect(curState.current).toEqual(0)
     expect(typeof setState).toEqual('function')
 })
 
@@ -22,151 +22,156 @@ test('useSyncState初始化基本数据类型正常', () => {
 test('useSyncState初始化引用数据类型正常', () => {
     const { result } = renderHook(() => useSyncState({ name: 'Tome', hobby: ['basketball', 'music'] }))
 
-    const [ state, setState ] = result.current
-    expect(state).toEqual({
-        state: { name: 'Tome', hobby: ['basketball', 'music'] },
-        current: { name: 'Tome', hobby: ['basketball', 'music'] }
-    })
-    expect(state.state).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
-    expect(state.current).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
+    const [ state, setState, curState ] = result.current
+    expect(state).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
+    expect(curState.current).toEqual(createImmutable({ name: 'Tome', hobby: ['basketball', 'music'] }))
     expect(typeof setState).toEqual('function')
 })
 
 
 test('useSyncState函数式初始化基本数据正常', () => {
     const { result } = renderHook(() => {
-        const [state, setState] = useSyncState(() => {
-            return 0 + 0
+        const [state, setState, curState] = useSyncState(() => {
+            return 1014 + 10
         })
         let computed = () => {
-            return 0 + 1
+            return 100 + 1
         }
-        const [state1, setState1] = useSyncState(() => computed())
+        const [state1, setState1, curState1] = useSyncState(() => computed())
 
-        return { state: [state, setState], state1: [state1, setState1] }
+        expect(state).toEqual(1024)
+        expect(curState.current).toEqual(1024)
+        expect(typeof setState).toEqual('function')
+
+        expect(state1).toEqual(101)
+        expect(curState1.current).toEqual(101)
+        expect(typeof setState1).toEqual('function')
     })
-
-    const [ state, setState ] = result.current.state
-    expect(state).toEqual({ state: 0, current: 0 })
-    expect(typeof setState).toEqual('function')
-
-    const [ state1, setState1 ] = result.current.state1
-    expect(state1).toEqual({ state: 1, current: 1 })
-    expect(typeof setState1).toEqual('function')
 })
 
 
 test('useSyncState函数式初始化引用数据正常', () => {
     const { result } = renderHook(() => {
-        const [state, setState] = useSyncState(() => {
+        const [state, setState, curState] = useSyncState(() => {
             return { name: 'Tome', hobby: ['basketball', 'music'] }
         })
         let computed = () => {
             return { name: 'Jone', hobby: ['rap', 'dancing'] }
         }
-        const [state1, setState1] = useSyncState(() => computed())
+        const [state1, setState1, curState1] = useSyncState(() => computed())
 
-        return { state: [state, setState], state1: [state1, setState1] }
-    })
+        expect(state).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
+        expect(curState.current).toEqual(createImmutable({ name: 'Tome', hobby: ['basketball', 'music'] }))
+        expect(typeof setState).toEqual('function')
 
-    const [ state, setState ] = result.current.state
-    expect(state).toEqual({
-        state: { name: 'Tome', hobby: ['basketball', 'music'] },
-        current: { name: 'Tome', hobby: ['basketball', 'music'] }
+        expect(state1).toEqual({ name: 'Jone', hobby: ['rap', 'dancing'] })
+        expect(curState1.current).toEqual(createImmutable({ name: 'Jone', hobby: ['rap', 'dancing'] }))
+        expect(typeof setState1).toEqual('function')
     })
-    expect(typeof setState).toEqual('function')
-
-    const [ state1, setState1 ] = result.current.state1
-    expect(state1).toEqual({
-        state: { name: 'Jone', hobby: ['rap', 'dancing'] },
-        current: { name: 'Jone', hobby: ['rap', 'dancing'] }
-    })
-    expect(typeof setState1).toEqual('function')
 })
 
 
-test('useSyncState的状态和ref为深拷贝', () => {
+test('useSyncState的current变更不会影响到state', () => {
     const { result } = renderHook(() => useSyncState({ name: 'Tome', hobby: ['basketball', 'music'] }))
-    const [ state, setState ] = result.current
-    expect(Object.is(state.state, state.current)).toEqual(false)
+    const [ state, setState, curState ] = result.current
+    expect(Object.is(state, curState.current)).toEqual(false)
 
-    state.current.name = 'Jone'
-    state.current.hobby[1] = 'dancing'
-    expect(state.current).toEqual({ name: 'Jone', hobby: ['basketball', 'dancing'] })
-    expect(state.state).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
+    curState.current.name = 'Jone'
+    curState.current.hobby[1] = 'dancing'
+    expect(_getImmutableCopy_(curState.current)).toEqual({ name: 'Jone', hobby: ['basketball', 'dancing'] })
+    expect(state).toEqual({ name: 'Tome', hobby: ['basketball', 'music'] })
 })
 
 
-test('useSyncState在setState后，ref会实时更新，状态在下一轮渲染会更新', () => {
-    interface State {
-        a: any;
-        [key: string]: any;
-    }
-
+test('useSyncState在setState后，current会实时更新，状态在下一轮渲染会更新', () => {
     const { result } = renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const [ state1, setState1 ] = useSyncState<State>({ a: { b: 1 } })
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState<any>({ a: { b: 1 } })
 
         useEffect(() => {
             setState(1)
-            expect(state.state).toEqual(0)
-            expect(state.current).toEqual(1)
-            
             setState1({
-                ...state1.state,
+                ...state1,
                 x: 1
             })
-            expect(state1.state).toEqual({ a: { b: 1 } })
-            expect(state1.current).toEqual({ a: { b: 1 }, x: 1 })
+
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(1)
+            expect(state1).toEqual({ a: { b: 1 } })
+            expect(_getImmutableCopy_(curState1.current)).toEqual({ a: { b: 1 }, x: 1 })
         }, [])
 
-        return { state, state1 }
+        return { state, curState, state1, curState1 }
     })
 
-    const state = result.current.state
-    expect(state.state).toEqual(1)
-    expect(state.current).toEqual(1)
+    const { state, curState, state1, curState1 } = result.current
+    expect(state).toEqual(1)
+    expect(curState.current).toEqual(1)
 
-    const state1 = result.current.state1
-    expect(state1.state).toEqual({ a: { b: 1 }, x: 1 })
-    expect(state1.current).toEqual({ a: { b: 1 }, x: 1 })
+    expect(state1).toEqual({ a: { b: 1 }, x: 1 })
+    expect(_getImmutableCopy_(curState1.current)).toEqual({ a: { b: 1 }, x: 1 })
 
-    state1.current.a.b = 2
-    expect(state1.state.a.b).toEqual(1)
+    curState1.current.a.b = 2
+    expect(state1.a.b).toEqual(1)
 })
 
 
-test('useSyncState通过函数式setState后，ref会实时更新，状态在下一轮渲染会更新', () => {
+test('useSyncState通过函数式setState后，current会实时更新，状态在下一轮渲染会更新', () => {
     const { result } = renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const [ state1, setState1 ] = useSyncState({ a: { b: 1 } })
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState({ a: { b: 1 } })
 
         useEffect(() => {
             setState(prev => prev + 1)
-            expect(state.state).toEqual(0)
-            expect(state.current).toEqual(1)
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(1)
 
             setState1(() => ({
-                ...state1.state,
+                ...state1,
                 x: 1
             }))
-            expect(state1.state).toEqual({ a: { b: 1 } })
-            expect(state1.current).toEqual({ a: { b: 1 }, x: 1 })
+            expect(state1).toEqual({ a: { b: 1 } })
+            expect(_getImmutableCopy_(curState1.current)).toEqual({ a: { b: 1 }, x: 1 })
         }, [])
 
-        return { state, state1 }
+        return { state, curState, state1, curState1 }
     })
 
-    const state = result.current.state
-    expect(state.state).toEqual(1)
-    expect(state.current).toEqual(1)
+    const { state, curState, state1, curState1 } = result.current
+    expect(state).toEqual(1)
+    expect(curState.current).toEqual(1)
 
-    const state1 = result.current.state1
-    expect(state1.state).toEqual({ a: { b: 1 }, x: 1 })
-    expect(state1.current).toEqual({ a: { b: 1 }, x: 1 })
+    expect(state1).toEqual({ a: { b: 1 }, x: 1 })
+    expect(_getImmutableCopy_(curState1.current)).toEqual({ a: { b: 1 }, x: 1 })
 
-    state1.current.a.b = 2
-    expect(state1.state.a.b).toEqual(1)
+    curState1.current.a.b = 2
+    expect(state1.a.b).toEqual(1)
+})
+
+
+test('useSyncState通过current和函数式的prev更新后数据会自动解包', () => {
+    const { result } = renderHook(() => {
+        const [ state, setState, curState ] = useSyncState<any>([{x: 1}])
+        const [ state1, setState1, curState1 ] = useSyncState([{ a: { b: 1 } }])
+
+        useEffect(() => {
+            setState(prev => {
+                prev.push({y: 2})
+                return prev
+            })
+            curState1.current[0].x = 1
+            setState1(curState1.current)
+        }, [])
+
+        return { state, curState, state1, curState1 }
+    })
+
+    const { state, curState, state1, curState1 } = result.current
+    expect(state).toEqual([{x: 1}, {y: 2}])
+    expect(curState.current).toEqual(createImmutable([{x: 1}, {y: 2}]))
+
+    expect(state1).toEqual([{ a: { b: 1 }, x: 1 }])
+    expect(curState1.current).toEqual(createImmutable([{ a: { b: 1 }, x: 1 }]))
 })
 
 test('----------------------------------', () => {})
@@ -176,20 +181,18 @@ test('----------------------------------', () => {})
  */
 test('useSyncMemo初始化一个依赖项正常', () => {
     renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const memo = useSyncMemo(() => {
-            return state.current + 1
-        }, [state])
+        const [ state, setState, curState ] = useSyncState(0)
+        const [memo, curMemo] = useSyncMemo(() => {
+            return curState.current + 1
+        }, [curState])
 
         useEffect(() => {
-            expect(state).toEqual({ state: 0, current: 0 })
-            expect(state.state).toEqual(0)
-            expect(state.current).toEqual(0)
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(0)
             expect(typeof setState).toEqual('function')
 
-            expect(memo).toEqual({state: 1, current: 1})
-            expect(memo.state).toEqual(1)
-            expect(memo.current).toEqual(1)
+            expect(memo).toEqual(1)
+            expect(curMemo.current).toEqual(1)
         }, [])
     })
 })
@@ -197,82 +200,151 @@ test('useSyncMemo初始化一个依赖项正常', () => {
 
 test('useSyncMemo初始化多个依赖项正常', () => {
     renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const [ state1, setState1 ] = useSyncState(1)
-        const [ state2, setState2 ] = useSyncState(2)
-        const memo = useSyncMemo(() => {
-            return state.current + state1.current + state2.current
-        }, [state, state1, state2])
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState(1)
+        const [ state2, setState2, curState2 ] = useSyncState(2)
+        const [memo, curMemo] = useSyncMemo(() => {
+            return curState.current + curState1.current + curState2.current
+        }, [curState, curState1, curState2])
 
         useEffect(() => {
-            expect(state).toEqual({ state: 0, current: 0 })
-            expect(state.state).toEqual(0)
-            expect(state.current).toEqual(0)
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(0)
             expect(typeof setState).toEqual('function')
 
-            expect(state1).toEqual({ state: 1, current: 1 })
-            expect(state1.state).toEqual(1)
-            expect(state1.current).toEqual(1)
+            expect(state1).toEqual(1)
+            expect(curState1.current).toEqual(1)
             expect(typeof setState1).toEqual('function')
 
-            expect(state2).toEqual({ state: 2, current: 2 })
-            expect(state2.state).toEqual(2)
-            expect(state2.current).toEqual(2)
+            expect(state2).toEqual(2)
+            expect(curState2.current).toEqual(2)
             expect(typeof setState2).toEqual('function')
 
-            expect(memo).toEqual({state: 3, current: 3})
-            expect(memo.state).toEqual(3)
-            expect(memo.current).toEqual(3)
+            expect(memo).toEqual(3)
+            expect(curMemo.current).toEqual(3)
         }, [])
     })
 })
 
 
-test('useSyncMemo有一个依赖项时，状态和ref为深拷贝', () => {
+test('useSyncMemo初始化无依赖项正常', () => {
     renderHook(() => {
-        const [ state, setState ] = useSyncState({ name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } })
-        const memo = useSyncMemo(() => {
-            return { admin: state.current }
-        }, [state])
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState(1)
+        const [ state2, setState2, curState2 ] = useSyncState(2)
+        const [memo, curMemo] = useSyncMemo(() => {
+            return curState.current + curState1.current + curState2.current
+        })
 
         useEffect(() => {
-            expect(Object.is(state.state, state.current)).toEqual(false)
-            expect(Object.is(memo.state, memo.current)).toEqual(false)
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(0)
+            expect(typeof setState).toEqual('function')
 
-            memo.current.admin.name = 'Jack'
-            memo.current.admin.relationship.father = 'Peter'
-            expect(memo.current).toEqual({ admin: { name: 'Jack', relationship: { father: 'Peter', mother: 'Mary' } } })
-            expect(memo.state).toEqual({ admin: { name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } } })
+            expect(state1).toEqual(1)
+            expect(curState1.current).toEqual(1)
+            expect(typeof setState1).toEqual('function')
+
+            expect(state2).toEqual(2)
+            expect(curState2.current).toEqual(2)
+            expect(typeof setState2).toEqual('function')
+
+            expect(memo).toEqual(3)
+            expect(curMemo.current).toEqual(3)
         }, [])
     })
 })
 
 
-test('useSyncMemo有多个依赖项时，状态和ref为深拷贝', () => {
-    renderHook(() => {
-        const [ state, setState ] = useSyncState({ name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } })
-        const [ state1, setState1 ] = useSyncState({ name: 'Ross', relationship: { father: 'Jone', mother: 'Mary' } })
-        const [ state2, setState2 ] = useSyncState({ name: 'Jack', relationship: { father: 'Jone', mother: 'Mary' } })
-        const memo = useSyncMemo(() => {
-            return { admin: state.current, visitor: [state1.current, state2.current] }
-        }, [state, state1, state2])
+test('useSyncMemo无依赖项时，会从函数中的状态自动获取依赖，更改状态current时只会更改curMemo', () => {
+    const { result } = renderHook(() => {
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState(1)
+        const [ state2, setState2, curState2 ] = useSyncState(2)
+        const [ state3, setState3, curState3 ] = useSyncState(3)
+        const [ memo, curMemo ] = useSyncMemo(() => {
+            return curState.current + curState1.current
+        })
+        const [ memo1, curMemo1 ] = useSyncMemo(() => {
+            return curState2.current + curState3.current
+        })
 
         useEffect(() => {
-            expect(Object.is(state.state, state.current)).toEqual(false)
-            expect(Object.is(state1.state, state1.current)).toEqual(false)
-            expect(Object.is(state2.state, state2.current)).toEqual(false)
-            expect(Object.is(memo.state, memo.current)).toEqual(false)
+            setState(10)
+            expect(memo).toEqual(1)
+            expect(curMemo.current).toEqual(11)
 
-            memo.current.admin.name = 'Henry'
-            memo.current.visitor[0].name = 'Peter'
-            expect(memo.current).toEqual({
+            setState1(20)
+            expect(memo).toEqual(1)
+            expect(curMemo.current).toEqual(30)
+
+            curState2.current = 10
+            expect(memo1).toEqual(5)
+            expect(curMemo1.current).toEqual(13)
+
+            setState3(20)
+            expect(memo1).toEqual(5)
+            expect(curMemo1.current).toEqual(30)
+        }, [])
+
+        return { memo, curMemo, memo1, curMemo1 }
+    })
+
+    const { memo, curMemo, memo1, curMemo1 } = result.current
+    
+    expect(memo).toEqual(30)
+    expect(curMemo.current).toEqual(30)
+
+    expect(memo1).toEqual(22)
+    expect(curMemo1.current).toEqual(22)
+})
+
+
+test('useSyncMemo有一个依赖项时，current变更不会影响到memo', () => {
+    renderHook(() => {
+        const [ state, setState, curState ] = useSyncState({ name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } })
+        const [memo, curMemo] = useSyncMemo(() => {
+            return { admin: _getImmutableCopy_(curState.current) }
+        }, [curState])
+
+        useEffect(() => {
+            expect(Object.is(state, curState.current)).toEqual(false)
+            expect(Object.is(memo, curMemo.current)).toEqual(false)
+            
+            curMemo.current.admin.name = 'Jack'
+            curMemo.current.admin.relationship.father = 'Peter'
+            expect(_getImmutableCopy_(curMemo.current)).toEqual({ admin: { name: 'Jack', relationship: { father: 'Peter', mother: 'Mary' } } })
+            expect(memo).toEqual({ admin: { name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } } })
+        }, [])
+    })
+})
+
+
+test('useSyncMemo有多个依赖项时，current变更不会影响到memo', () => {
+    renderHook(() => {
+        const [ state, setState, curState ] = useSyncState({ name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } })
+        const [ state1, setState1, curState1 ] = useSyncState({ name: 'Ross', relationship: { father: 'Jone', mother: 'Mary' } })
+        const [ state2, setState2, curState2 ] = useSyncState({ name: 'Jack', relationship: { father: 'Jone', mother: 'Mary' } })
+        const [ memo, curMemo ] = useSyncMemo(() => {
+            return { admin: _getImmutableCopy_(curState.current), visitor: [_getImmutableCopy_(curState1.current), _getImmutableCopy_(curState2.current)] }
+        }, [curState, curState1, curState2])
+
+        useEffect(() => {
+            expect(Object.is(state, curState.current)).toEqual(false)
+            expect(Object.is(state1, curState1.current)).toEqual(false)
+            expect(Object.is(state2, curState2.current)).toEqual(false)
+            expect(Object.is(memo, curMemo.current)).toEqual(false)
+
+            curMemo.current.admin.name = 'Henry'
+            curMemo.current.visitor[0].name = 'Peter'
+            expect(_getImmutableCopy_(curMemo.current)).toEqual({
                 admin: { name: 'Henry', relationship: { father: 'Jone', mother: 'Mary' } },
                 visitor: [
                     { name: 'Peter', relationship: { father: 'Jone', mother: 'Mary' } },
                     { name: 'Jack', relationship: { father: 'Jone', mother: 'Mary' } }
                 ]
             })
-            expect(memo.state).toEqual({
+            expect(memo).toEqual({
                 admin: { name: 'Tome', relationship: { father: 'Jone', mother: 'Mary' } },
                 visitor: [
                     { name: 'Ross', relationship: { father: 'Jone', mother: 'Mary' } },
@@ -284,49 +356,59 @@ test('useSyncMemo有多个依赖项时，状态和ref为深拷贝', () => {
 })
 
 
-test('有一个依赖项的useSyncMemo在setState后，ref会实时更新，状态在下一轮渲染会更新', () => {
+test('有一个依赖项的useSyncMemo在setState后，current会实时更新，memo在下一轮渲染会更新', () => {
     const { result } = renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const memo = useSyncMemo(() => {
-            return state.current + 1
-        }, [state])
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ memo, curMemo ] = useSyncMemo(() => {
+            return curState.current + 1
+        }, [curState])
 
         useEffect(() => {
             setState(1)
-            expect(state).toEqual({ state: 0, current: 1 })
-            expect(memo).toEqual({ state: 1, current: 2 })
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(1)
+            expect(memo).toEqual(1)
+            expect(curMemo.current).toEqual(2)
         }, [])
 
-        return { state, memo }
+        return { state, curState, memo, curMemo }
     })
 
-    const { state, memo } = result.current
-    expect(state).toEqual({ state: 1, current: 1 })
-    expect(memo).toEqual({ state: 2, current: 2 })
+    const { state, curState, memo, curMemo } = result.current
+    expect(state).toEqual(1)
+    expect(curState.current).toEqual(1)
+    expect(memo).toEqual(2)
+    expect(curMemo.current).toEqual(2)
 })
 
 
-test('有多个依赖项的useSyncMemo在setState后，ref会实时更新，状态在下一轮渲染会更新', () => {
+test('有多个依赖项的useSyncMemo在setState后，current会实时更新，memo在下一轮渲染会更新', () => {
     const { result } = renderHook(() => {
-        const [ state, setState ] = useSyncState(0)
-        const [ state1, setState1 ] = useSyncState(() => 0)
-        const memo = useSyncMemo(() => {
-            return state.current + state1.current
-        }, [state, state1])
+        const [ state, setState, curState ] = useSyncState(0)
+        const [ state1, setState1, curState1 ] = useSyncState(() => 0)
+        const [ memo, curMemo ] = useSyncMemo(() => {
+            return curState.current + curState1.current
+        }, [curState, curState1])
 
         useEffect(() => {
             setState(() => 1)
             setState1(2)
-            expect(state).toEqual({ state: 0, current: 1 })
-            expect(state1).toEqual({ state: 0, current: 2 })
-            expect(memo).toEqual({ state: 0, current: 3 })
+            expect(state).toEqual(0)
+            expect(curState.current).toEqual(1)
+            expect(state1).toEqual(0)
+            expect(curState1.current).toEqual(2)
+            expect(memo).toEqual(0)
+            expect(curMemo.current).toEqual(3)
         }, [])
 
-        return { state, state1, memo }
+        return { state, curState, state1, curState1, memo, curMemo }
     })
 
-    const { state, state1, memo } = result.current
-    expect(state).toEqual({ state: 1, current: 1 })
-    expect(state1).toEqual({ state: 2, current: 2 })
-    expect(memo).toEqual({ state: 3, current: 3 })
+    const { state, curState, state1, curState1, memo, curMemo } = result.current
+    expect(state).toEqual(1)
+    expect(curState.current).toEqual(1)
+    expect(state1).toEqual(2)
+    expect(curState1.current).toEqual(2)
+    expect(memo).toEqual(3)
+    expect(curMemo.current).toEqual(3)
 })

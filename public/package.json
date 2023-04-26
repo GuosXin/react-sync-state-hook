@@ -1,6 +1,6 @@
 {
   "name": "react-sync-state-hook",
-  "version": "2.3.0",
+  "version": "3.0.1",
   "description": "Using synchronous state in react.",
   "main": "index.js",
   "scripts": {
@@ -20,13 +20,14 @@
     "sync-state-hook",
     "同步",
     "最新",
-    "状态"
+    "状态",
+    "无依赖",
+    "消除副作用"
   ],
   "author": "Xin",
   "license": "MIT",
   "peerDependencies": {
-    "react": ">= 16.9.0",
-    "lodash": ">= 4.17.21"
+    "react": ">= 16.9.0"
   },
   "bugs": {
     "url": "https://github.com/GuosXin/react-sync-state-hook/issues"
