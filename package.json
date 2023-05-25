@@ -56,6 +56,6 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "handleable-immutable": "^1.2.0"
+    "handleable-immutable": "^1.2.1"
   }
 }
